@@ -1,0 +1,78 @@
+
+================================================================================
+[2025-10-27 10:56:19] ERRO EM: executar_scrap
+the JSON object must be str, bytes or bytearray, not dict
+Traceback (most recent call last):
+  File "C:\Users\gabriel.ribeiro\Desktop\Projetos\Atlas\Nova pasta\atlas-data-flow\src\scraps.py", line 493, in executar_scrap
+    headers_dict = json.loads(headers) if headers else {}
+                   ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gabriel.ribeiro\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not dict
+
+================================================================================
+
+================================================================================
+[2025-10-27 11:00:05] ERRO EM: executar_scrap
+the JSON object must be str, bytes or bytearray, not dict
+Traceback (most recent call last):
+  File "C:\Users\gabriel.ribeiro\Desktop\Projetos\Atlas\Nova pasta\atlas-data-flow\src\scraps.py", line 493, in executar_scrap
+    headers_dict = json.loads(headers) if headers else {}
+                   ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gabriel.ribeiro\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not dict
+
+================================================================================
+
+================================================================================
+[2025-10-27 11:00:22] ERRO EM: executar_scrap
+the JSON object must be str, bytes or bytearray, not dict
+Traceback (most recent call last):
+  File "C:\Users\gabriel.ribeiro\Desktop\Projetos\Atlas\Nova pasta\atlas-data-flow\src\scraps.py", line 493, in executar_scrap
+    headers_dict = json.loads(headers) if headers else {}
+                   ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gabriel.ribeiro\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not dict
+
+================================================================================
+
+================================================================================
+[2025-10-27 11:10:16] ERRO EM: executar_scrap
+the JSON object must be str, bytes or bytearray, not dict
+Traceback (most recent call last):
+  File "C:\Users\gabriel.ribeiro\Desktop\Projetos\Atlas\Nova pasta\atlas-data-flow\src\scraps.py", line 493, in executar_scrap
+    headers_dict = json.loads(headers) if headers else {}
+                   ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gabriel.ribeiro\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not dict
+
+================================================================================
+
+================================================================================
+[2025-10-27 11:15:14] ERRO EM: executar_scrap
+the JSON object must be str, bytes or bytearray, not dict
+Traceback (most recent call last):
+  File "C:\Users\gabriel.ribeiro\Desktop\Projetos\Atlas\Nova pasta\atlas-data-flow\src\scraps.py", line 493, in executar_scrap
+    headers_dict = json.loads(headers) if headers else {}
+                   ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gabriel.ribeiro\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not dict
+
+================================================================================
+
+================================================================================
+[2025-10-27 11:15:53] ERRO EM: executar_scrap
+the JSON object must be str, bytes or bytearray, not dict
+Traceback (most recent call last):
+  File "C:\Users\gabriel.ribeiro\Desktop\Projetos\Atlas\Nova pasta\atlas-data-flow\src\scraps.py", line 493, in executar_scrap
+    headers_dict = json.loads(headers) if headers else {}
+                   ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\gabriel.ribeiro\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not dict
+
+================================================================================
