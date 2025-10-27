@@ -39,7 +39,7 @@ def registrar_erro(contexto, erro):
         f.write(str(erro) + "\n")
         f.write(traceback.format_exc())
         f.write("\n" + "=" * 80 + "\n")
-    print(f"⚠️ ERRO ({contexto}): {erro}")
+    print(f"ERRO ({contexto}): {erro}")
 
 
 # ===============================
@@ -114,10 +114,10 @@ class APIRoutesManager(QWidget):
 
         # Botões de ação
         btn_layout = QHBoxLayout()
-        btn_salvar = QPushButton("💾 Salvar Nova Rota")
-        btn_excluir = QPushButton("🗑️ Excluir Rota")
-        btn_recarregar = QPushButton("🔄 Recarregar Lista")
-        btn_salvar_edicao = QPushButton("✅ Salvar Edições da Tabela")
+        btn_salvar = QPushButton("Salvar Nova Rota")
+        btn_excluir = QPushButton("Excluir Rota")
+        btn_recarregar = QPushButton("Recarregar Lista")
+        btn_salvar_edicao = QPushButton("Salvar Edições da Tabela")
 
         btn_salvar.clicked.connect(self.salvar_rota)
         btn_excluir.clicked.connect(self.excluir_rota)
@@ -438,9 +438,9 @@ class APIRoutesManager(QWidget):
             cur.close()
             conn.close()
 
-            mensagem = f"✅ {alteracoes} registro(s) atualizado(s) com sucesso!"
+            mensagem = f"{alteracoes} registro(s) atualizado(s) com sucesso!"
             if erros:
-                mensagem += "\n\n⚠️ Erros encontrados:\n" + "\n".join(erros)
+                mensagem += "\n\nErros encontrados:\n" + "\n".join(erros)
 
             QMessageBox.information(self, "Resultado", mensagem)
             self.carregar_dados()

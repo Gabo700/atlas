@@ -45,7 +45,7 @@ def registrar_erro(contexto, erro):
         f.write(str(erro) + "\n")
         f.write(traceback.format_exc())
         f.write("\n" + "=" * 80 + "\n")
-    print(f"⚠️ ERRO ({contexto}): {erro}")
+    print(f"ERRO ({contexto}): {erro}")
 
 
 # ===============================
@@ -122,9 +122,9 @@ class ETLWorker(QThread):
                 CREATE INDEX idx_dadosraw_payload_gin ON dados_raw USING GIN (payload jsonb_path_ops);
                 CREATE UNIQUE INDEX idx_dadosraw_cliente_hash ON dados_raw (cliente_id, hash_conteudo);
             """)
-            print("✅ Tabela dados_raw criada com sucesso!")
+            print("Tabela dados_raw criada com sucesso!")
         else:
-            print("✅ Tabela dados_raw já existe!")
+            print("Tabela dados_raw já existe!")
         
         return "dados_raw"
     
@@ -157,7 +157,7 @@ class ETLWorker(QThread):
                     if cur.rowcount > 0:
                         with self.lock:
                             self.total_registros += 1
-                        print(f"✅ Registro inserido: {self.total_registros}")
+                        print(f"Registro inserido: {self.total_registros}")
                     
                     conn.commit()
                     self.data_queue.task_done()
@@ -256,10 +256,10 @@ class ETLWorker(QThread):
             current_page = 1
             has_more_pages = True
             
-            print(f"\n🚀 Iniciando ETL do cliente {cliente_id} - Rota: {nome_rota}")
-            print(f"📅 Período: {data_inicio_str} até {data_fim_str}")
-            print(f"⚙️ Configurações: Retry={self.retry_max}, Processamento=1 por vez")
-            print(f"📊 Tabela destino: dados_raw")
+            print(f"\nIniciando ETL do cliente {cliente_id} - Rota: {nome_rota}")
+            print(f"Período: {data_inicio_str} até {data_fim_str}")
+            print(f"Configurações: Retry={self.retry_max}, Processamento=1 por vez")
+            print(f"Tabela destino: dados_raw")
             
             # Loop principal de coleta de dados
             while has_more_pages and not self._stop_flag:
@@ -292,7 +292,7 @@ class ETLWorker(QThread):
                         if retry_count < self.retry_max:
                             # Backoff exponencial
                             wait_time = (2 ** retry_count) + 0.5
-                            print(f"⚠️ Tentativa {retry_count}/{self.retry_max} falhou, aguardando {wait_time:.1f}s...")
+                            print(f"Tentativa {retry_count}/{self.retry_max} falhou, aguardando {wait_time:.1f}s...")
                             time.sleep(wait_time)
                             continue
                         else:
@@ -340,7 +340,7 @@ class ETLWorker(QThread):
                             # Adiciona à fila thread-safe para escrita no banco
                             try:
                                 self.data_queue.put_nowait((cliente_id, nome_rota, json.dumps(item), hash_content))
-                                print(f"📤 Item enviado para fila: {hash_content[:8]}...")
+                                print(f"Item enviado para fila: {hash_content[:8]}...")
                             except queue.Full:
                                 # Se a fila estiver cheia, aguarda um pouco
                                 time.sleep(0.1)
@@ -359,7 +359,7 @@ class ETLWorker(QThread):
                 # Calcula taxa de processamento
                 taxa_registros = total_registros_atual / elapsed_time if elapsed_time > 0 else 0
                 
-                msg = f"📄 Página {current_page} | ⏱️ {int(elapsed_time)}s | 📊 {total_registros_atual:,} registros | 🚀 {taxa_registros:.1f} reg/s"
+                msg = f"Página {current_page} | {int(elapsed_time)}s | {total_registros_atual:,} registros | {taxa_registros:.1f} reg/s"
                 self.progress.emit(
                     msg,
                     current_page,
@@ -414,14 +414,14 @@ class ETLWorker(QThread):
                 
                 mensagem_final = f"""Scrap ID {self.scrap_id} concluído com sucesso!
 
-✅ Total de registros coletados: {total_registros_final:,}
-📊 Tabela: dados_raw
-📅 Período: {data_inicio_str} até {data_fim_str}
-⏱️ Tempo total: {int(tempo_total)}s
-🚀 Taxa média: {taxa_final:.1f} registros/segundo
-📄 Páginas processadas: {current_page - 1}
-🧵 Multithreading: Ativo (Coleta + Escrita simultânea)
-⚙️ Processamento: Busca 1 escreve 1 (chunks)"""
+ Total de registros coletados: {total_registros_final:,}
+ Tabela: dados_raw
+ Período: {data_inicio_str} até {data_fim_str}
+ Tempo total: {int(tempo_total)}s
+ Taxa média: {taxa_final:.1f} registros/segundo
+ Páginas processadas: {current_page - 1}
+ Multithreading: Ativo (Coleta + Escrita simultânea)
+ Processamento: Busca 1 escreve 1 (chunks)"""
                 
                 self.finished.emit(total_registros_final, mensagem_final)
             else:
@@ -513,10 +513,10 @@ class ScrapsManager(QWidget):
 
         # Botões de ação
         btn_layout = QHBoxLayout()
-        btn_salvar = QPushButton("💾 Criar Scrap")
-        btn_excluir = QPushButton("🗑️ Excluir")
-        btn_executar = QPushButton("▶️ Executar Scrap")
-        btn_recarregar = QPushButton("🔄 Recarregar Lista")
+        btn_salvar = QPushButton("Criar Scrap")
+        btn_excluir = QPushButton("Excluir")
+        btn_executar = QPushButton("Executar Scrap")
+        btn_recarregar = QPushButton("Recarregar Lista")
 
         btn_salvar.clicked.connect(self.salvar_scrap)
         btn_excluir.clicked.connect(self.excluir_scrap)
@@ -815,7 +815,7 @@ class ScrapsManager(QWidget):
                 mensagem_completa = f"""
 {msg}
 
-📊 Estatísticas:
+ Estatísticas:
    • Progresso: {current}/{total} páginas ({current*100//total}%)
    • Registros coletados: {registros:,}
    • Tempo estimado restante: {tempo_str}

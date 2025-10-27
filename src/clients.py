@@ -33,7 +33,7 @@ def registrar_erro(contexto, erro):
         f.write(str(erro) + "\n")
         f.write(traceback.format_exc())
         f.write("\n" + "=" * 80 + "\n")
-    print(f"⚠️ ERRO ({contexto}): {erro}")
+    print(f"ERRO ({contexto}): {erro}")
 
 
 # ===============================
@@ -69,10 +69,10 @@ class TokenManager(QWidget):
         self.token_input.setPlaceholderText("Token do Cliente")
 
         # Botões
-        btn_salvar = QPushButton("💾 Salvar Novo")
-        btn_excluir = QPushButton("🗑️ Excluir")
-        btn_recarregar = QPushButton("🔄 Recarregar Lista")
-        btn_salvar_edicao = QPushButton("✅ Salvar Edições da Tabela")
+        btn_salvar = QPushButton("Salvar Novo")
+        btn_excluir = QPushButton("Excluir")
+        btn_recarregar = QPushButton("Recarregar Lista")
+        btn_salvar_edicao = QPushButton("Salvar Edições da Tabela")
 
         btn_salvar.clicked.connect(self.salvar_token)
         btn_excluir.clicked.connect(self.excluir_cliente)
@@ -248,7 +248,7 @@ class TokenManager(QWidget):
             mensagem = "Token salvo com sucesso!"
             if eh_novo:
                 nome_tabela = self.criar_tabela_cliente(cur, cliente_id)
-                mensagem += f"\n\n✨ Tabela '{nome_tabela}' criada com sucesso!"
+                mensagem += f"\n\n Tabela '{nome_tabela}' criada com sucesso!"
             
             conn.commit()
             cur.close()
@@ -299,9 +299,9 @@ class TokenManager(QWidget):
             cur.close()
             conn.close()
             
-            mensagem = f"✅ {alteracoes} registro(s) atualizado(s) com sucesso!"
+            mensagem = f" {alteracoes} registro(s) atualizado(s) com sucesso!"
             if erros:
-                mensagem += "\n\n⚠️ Erros encontrados:\n" + "\n".join(erros)
+                mensagem += "\n\n Erros encontrados:\n" + "\n".join(erros)
             
             QMessageBox.information(self, "Resultado", mensagem)
             self.carregar_dados()

@@ -39,7 +39,7 @@ def registrar_erro(contexto, erro):
         f.write(str(erro) + "\n")
         f.write(traceback.format_exc())
         f.write("\n" + "=" * 80 + "\n")
-    print(f"⚠️ ERRO ({contexto}): {erro}")
+    print(f" ERRO ({contexto}): {erro}")
 
 # ===============================
 #  Configuração do banco
@@ -72,16 +72,16 @@ class AtlasDataFlowManager(QWidget):
         # Aba 1: Gerenciamento de Clientes e Tokens
         self.tab_clientes = QWidget()
         self.setup_tab_clientes()
-        tabs.addTab(self.tab_clientes, "👥 Clientes & Tokens")
+        tabs.addTab(self.tab_clientes, "Clientes & Tokens")
         
         # Aba 2: Gerenciamento de Rotas de API
         self.tab_rotas = QWidget()
         self.setup_tab_rotas()
-        tabs.addTab(self.tab_rotas, "🔗 Rotas de API")
+        tabs.addTab(self.tab_rotas, "Rotas de API")
         
         # Aba 3: Scraps de ETL (usa classe externa)
         self.scraps_manager = ScrapsManager()
-        tabs.addTab(self.scraps_manager, "⚡ Scraps de ETL")
+        tabs.addTab(self.scraps_manager, "Scraps de ETL")
         
         layout.addWidget(tabs)
         self.setLayout(layout)
@@ -158,8 +158,8 @@ class AtlasDataFlowManager(QWidget):
         self.cliente_id_input.setPlaceholderText("ID do Cliente (ex: 2151)")
         self.token_input.setPlaceholderText("Token do Cliente")
         
-        btn_salvar_cli = QPushButton("💾 Salvar Novo")
-        btn_excluir_cli = QPushButton("🗑️ Excluir")
+        btn_salvar_cli = QPushButton("Salvar Novo")
+        btn_excluir_cli = QPushButton("Excluir")
         btn_salvar_cli.clicked.connect(self.salvar_token)
         btn_excluir_cli.clicked.connect(self.excluir_cliente)
         
@@ -173,8 +173,8 @@ class AtlasDataFlowManager(QWidget):
         
         # Botões da tabela
         btn_layout = QHBoxLayout()
-        btn_recarregar_cli = QPushButton("🔄 Recarregar Lista")
-        btn_salvar_edicao_cli = QPushButton("✅ Salvar Edições da Tabela")
+        btn_recarregar_cli = QPushButton("Recarregar Lista")
+        btn_salvar_edicao_cli = QPushButton("Salvar Edições da Tabela")
         btn_recarregar_cli.clicked.connect(self.carregar_dados_clientes)
         btn_salvar_edicao_cli.clicked.connect(self.salvar_edicoes_tabela_clientes)
         btn_layout.addWidget(btn_salvar_edicao_cli)
@@ -329,9 +329,9 @@ class AtlasDataFlowManager(QWidget):
             cur.close()
             conn.close()
             
-            mensagem = f"✅ {alteracoes} registro(s) atualizado(s) com sucesso!"
+            mensagem = f"{alteracoes} registro(s) atualizado(s) com sucesso!"
             if erros:
-                mensagem += "\n\n⚠️ Erros encontrados:\n" + "\n".join(erros)
+                mensagem += "\n\n Erros encontrados:\n" + "\n".join(erros)
             QMessageBox.information(self, "Resultado", mensagem)
             self.carregar_dados_clientes()
             self.carregar_clientes_combo()
@@ -387,10 +387,10 @@ class AtlasDataFlowManager(QWidget):
         
         # Botões
         btn_layout = QHBoxLayout()
-        btn_salvar_rota = QPushButton("💾 Salvar Nova Rota")
-        btn_excluir_rota = QPushButton("🗑️ Excluir Rota")
-        btn_recarregar_rotas = QPushButton("🔄 Recarregar Lista")
-        btn_salvar_edicao_rota = QPushButton("✅ Salvar Edições da Tabela")
+        btn_salvar_rota = QPushButton("Salvar Nova Rota")
+        btn_excluir_rota = QPushButton("Excluir Rota")
+        btn_recarregar_rotas = QPushButton("Recarregar Lista")
+        btn_salvar_edicao_rota = QPushButton("Salvar Edições da Tabela")
         
         btn_salvar_rota.clicked.connect(self.salvar_rota)
         btn_excluir_rota.clicked.connect(self.excluir_rota)
@@ -639,9 +639,9 @@ class AtlasDataFlowManager(QWidget):
             cur.close()
             conn.close()
             
-            mensagem = f"✅ {alteracoes} registro(s) atualizado(s) com sucesso!"
+            mensagem = f"{alteracoes} registro(s) atualizado(s) com sucesso!"
             if erros:
-                mensagem += "\n\n⚠️ Erros encontrados:\n" + "\n".join(erros)
+                mensagem += "\n\n Erros encontrados:\n" + "\n".join(erros)
             QMessageBox.information(self, "Resultado", mensagem)
             self.carregar_dados_rotas()
         except Exception as e:

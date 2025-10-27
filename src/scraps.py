@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDateEdit,
     QProgressDialog,
+    QCheckBox,
 )
 from PySide6.QtCore import Qt, QDate, QThread, Signal
 
@@ -45,7 +46,7 @@ def registrar_erro(contexto, erro):
         f.write(str(erro) + "\n")
         f.write(traceback.format_exc())
         f.write("\n" + "=" * 80 + "\n")
-    print(f"⚠️ ERRO ({contexto}): {erro}")
+    print(f" ERRO ({contexto}): {erro}")
 
 
 # ===============================
@@ -93,42 +94,84 @@ class ETLWorker(QThread):
         self._stop_flag = True
         # Adiciona item especial para parar o writer
         try:
-            self.data_queue.put_nowait(("STOP", None, None, None))
+            self.data_queue.put_nowait(("STOP", None, None, None, None))
         except queue.Full:
             pass
     
-    def _verificar_tabela_dados_raw(self, cur):
-        """Verifica se a tabela dados_raw existe e cria se necessário"""
+    def _sanitizar_nome_tabela(self, nome):
+        """Remove caracteres especiais e garante que o nome da tabela seja válido"""
+        # Substitui caracteres inválidos por underscore
+        import re
+        nome_limpo = re.sub(r'[^a-zA-Z0-9_]', '_', nome)
+        # Remove underscores múltiplos
+        nome_limpo = re.sub(r'_+', '_', nome_limpo)
+        # Remove underscores no início/fim
+        nome_limpo = nome_limpo.strip('_')
+        # Garante que comece com letra (não número)
+        if nome_limpo and nome_limpo[0].isdigit():
+            nome_limpo = 'tbl_' + nome_limpo
+        return nome_limpo.lower()
+    
+    def _criar_tabela_cliente_raw(self, cur, cliente_id, nome_rota):
+        """Cria uma tabela específica para o cliente e rota"""
+        # Gera nome da tabela sanitizado
+        nome_base = f"{cliente_id}_{nome_rota}_raw"
+        nome_tabela = self._sanitizar_nome_tabela(nome_base)
+        
+        # Verifica se a tabela já existe
         cur.execute("""
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
-                WHERE table_name = 'dados_raw'
+                WHERE table_name = %s
             );
-        """)
+        """, (nome_tabela,))
         
         if not cur.fetchone()[0]:
-            # Cria a tabela dados_raw conforme o schema do banco
-            cur.execute("""
-                CREATE TABLE dados_raw (
+            # Cria a tabela específica para o cliente/rota
+            # Usa aspas duplas para escapar o nome da tabela
+            cur.execute(f"""
+                CREATE TABLE "{nome_tabela}" (
                     id BIGSERIAL PRIMARY KEY,
-                    cliente_id INTEGER NOT NULL REFERENCES clientes_tokens(cliente_id),
                     data_coleta TIMESTAMP DEFAULT NOW(),
-                    origem TEXT NOT NULL,
                     payload JSONB NOT NULL,
-                    hash_conteudo TEXT UNIQUE
+                    hash_conteudo TEXT UNIQUE,
+                    data_processamento DATE
                 );
-                
-                CREATE INDEX idx_dadosraw_cliente_data ON dados_raw (cliente_id, data_coleta DESC);
-                CREATE INDEX idx_dadosraw_payload_gin ON dados_raw USING GIN (payload jsonb_path_ops);
-                CREATE UNIQUE INDEX idx_dadosraw_cliente_hash ON dados_raw (cliente_id, hash_conteudo);
             """)
-            print("✅ Tabela dados_raw criada com sucesso!")
+            
+            # Cria índices separadamente
+            cur.execute(f'CREATE INDEX idx_{nome_tabela}_data ON "{nome_tabela}" (data_processamento DESC);')
+            cur.execute(f'CREATE INDEX idx_{nome_tabela}_payload_gin ON "{nome_tabela}" USING GIN (payload jsonb_path_ops);')
+            cur.execute(f'CREATE UNIQUE INDEX idx_{nome_tabela}_hash ON "{nome_tabela}" (hash_conteudo);')
+            
+            print(f"Tabela {nome_tabela} criada com sucesso!")
         else:
-            print("✅ Tabela dados_raw já existe!")
+            print(f"Tabela {nome_tabela} já existe!")
         
-        return "dados_raw"
+        return nome_tabela
     
-    def _database_writer(self):
+    def _extrair_data_do_payload(self, payload):
+        """Extrai data do payload para filtro - função genérica que pode ser customizada"""
+        try:
+            payload_dict = json.loads(payload) if isinstance(payload, str) else payload
+            
+            # Tenta encontrar campos de data comuns
+            for field in ['data', 'date', 'data_processamento', 'created_at', 'timestamp', 'dt_processed']:
+                if field in payload_dict:
+                    date_str = payload_dict[field]
+                    if isinstance(date_str, str):
+                        # Tenta vários formatos de data
+                        for fmt in ['%Y-%m-%d', '%d/%m/%Y', '%Y-%m-%dT%H:%M:%S', '%d-%m-%Y']:
+                            try:
+                                return datetime.strptime(date_str.split('T')[0], fmt).date()
+                            except:
+                                continue
+            # Se não encontrar data específica, usa data atual
+            return date.today()
+        except:
+            return date.today()
+    
+    def _database_writer(self, nome_tabela, data_inicio, data_fim):
         """Thread separada para escrita no banco de dados - busca 1 escreve 1"""
         conn = None
         cur = None
@@ -147,17 +190,23 @@ class ETLWorker(QThread):
                     
                     cliente_id, origem, payload, hash_content = data_item
                     
-                    # Insere 1 registro por vez conforme solicitado
-                    cur.execute("""
-                        INSERT INTO dados_raw (cliente_id, origem, payload, hash_conteudo)
-                        VALUES (%s, %s, %s, %s)
-                        ON CONFLICT (hash_conteudo) DO NOTHING;
-                    """, (cliente_id, origem, payload, hash_content))
+                    # Extrai data do payload para filtro
+                    data_processamento = self._extrair_data_do_payload(payload)
                     
-                    if cur.rowcount > 0:
-                        with self.lock:
-                            self.total_registros += 1
-                        print(f"✅ Registro inserido: {self.total_registros}")
+                    # Verifica se a data está dentro do range selecionado
+                    if data_inicio <= data_processamento <= data_fim:
+                        # Insere 1 registro por vez conforme solicitado
+                        # Usa aspas duplas para escapar o nome da tabela
+                        cur.execute(f"""
+                            INSERT INTO "{nome_tabela}" (payload, hash_conteudo, data_processamento)
+                            VALUES (%s, %s, %s)
+                            ON CONFLICT (hash_conteudo) DO NOTHING;
+                        """, (payload, hash_content, data_processamento))
+                        
+                        if cur.rowcount > 0:
+                            with self.lock:
+                                self.total_registros += 1
+                            print(f" Registro inserido na tabela {nome_tabela}: {self.total_registros}")
                     
                     conn.commit()
                     self.data_queue.task_done()
@@ -167,6 +216,11 @@ class ETLWorker(QThread):
                     continue
                 except Exception as e:
                     registrar_erro("database_writer", e)
+                    # Tenta fazer commit mesmo em caso de erro
+                    try:
+                        conn.commit()
+                    except:
+                        pass
                     break
                 
         except Exception as e:
@@ -217,12 +271,16 @@ class ETLWorker(QThread):
             """, (int(self.scrap_id),))
             conn.commit()
             
-            # Verifica e cria a tabela dados_raw
-            self._verificar_tabela_dados_raw(cur)
+            # Cria tabela específica para este cliente/rota
+            nome_tabela = self._criar_tabela_cliente_raw(cur, cliente_id, nome_rota)
             conn.commit()
             
             # Inicia a thread de escrita no banco
-            self.writer_thread = threading.Thread(target=self._database_writer, daemon=True)
+            self.writer_thread = threading.Thread(
+                target=self._database_writer, 
+                args=(nome_tabela, data_inicio, data_fim), 
+                daemon=True
+            )
             self.writer_thread.start()
             
             # Processa headers
@@ -256,10 +314,10 @@ class ETLWorker(QThread):
             current_page = 1
             has_more_pages = True
             
-            print(f"\n🚀 Iniciando ETL do cliente {cliente_id} - Rota: {nome_rota}")
-            print(f"📅 Período: {data_inicio_str} até {data_fim_str}")
-            print(f"⚙️ Configurações: Retry={self.retry_max}, Processamento=1 por vez")
-            print(f"📊 Tabela destino: dados_raw")
+            print(f"\n Iniciando ETL do cliente {cliente_id} - Rota: {nome_rota}")
+            print(f" Período: {data_inicio_str} até {data_fim_str}")
+            print(f" Tabela destino: {nome_tabela}")
+            print(f" Configurações: Retry={self.retry_max}, Processamento=1 por vez")
             
             # Loop principal de coleta de dados
             while has_more_pages and not self._stop_flag:
@@ -292,7 +350,7 @@ class ETLWorker(QThread):
                         if retry_count < self.retry_max:
                             # Backoff exponencial
                             wait_time = (2 ** retry_count) + 0.5
-                            print(f"⚠️ Tentativa {retry_count}/{self.retry_max} falhou, aguardando {wait_time:.1f}s...")
+                            print(f" Tentativa {retry_count}/{self.retry_max} falhou, aguardando {wait_time:.1f}s...")
                             time.sleep(wait_time)
                             continue
                         else:
@@ -340,7 +398,7 @@ class ETLWorker(QThread):
                             # Adiciona à fila thread-safe para escrita no banco
                             try:
                                 self.data_queue.put_nowait((cliente_id, nome_rota, json.dumps(item), hash_content))
-                                print(f"📤 Item enviado para fila: {hash_content[:8]}...")
+                                print(f" Item enviado para fila: {hash_content[:8]}...")
                             except queue.Full:
                                 # Se a fila estiver cheia, aguarda um pouco
                                 time.sleep(0.1)
@@ -359,7 +417,7 @@ class ETLWorker(QThread):
                 # Calcula taxa de processamento
                 taxa_registros = total_registros_atual / elapsed_time if elapsed_time > 0 else 0
                 
-                msg = f"📄 Página {current_page} | ⏱️ {int(elapsed_time)}s | 📊 {total_registros_atual:,} registros | 🚀 {taxa_registros:.1f} reg/s"
+                msg = f" Página {current_page} | {int(elapsed_time)}s | {total_registros_atual:,} registros | {taxa_registros:.1f} reg/s"
                 self.progress.emit(
                     msg,
                     current_page,
@@ -382,7 +440,7 @@ class ETLWorker(QThread):
             if self.writer_thread and self.writer_thread.is_alive():
                 # Adiciona item especial para parar o writer
                 try:
-                    self.data_queue.put_nowait(("STOP", None, None, None))
+                    self.data_queue.put_nowait(("STOP", None, None, None, None))
                 except queue.Full:
                     pass
                 
@@ -414,14 +472,14 @@ class ETLWorker(QThread):
                 
                 mensagem_final = f"""Scrap ID {self.scrap_id} concluído com sucesso!
 
-✅ Total de registros coletados: {total_registros_final:,}
-📊 Tabela: dados_raw
-📅 Período: {data_inicio_str} até {data_fim_str}
-⏱️ Tempo total: {int(tempo_total)}s
-🚀 Taxa média: {taxa_final:.1f} registros/segundo
-📄 Páginas processadas: {current_page - 1}
-🧵 Multithreading: Ativo (Coleta + Escrita simultânea)
-⚙️ Processamento: Busca 1 escreve 1 (chunks)"""
+ Total de registros coletados: {total_registros_final:,}
+ Tabela criada: {nome_tabela}
+ Período: {data_inicio_str} até {data_fim_str}
+ Tempo total: {int(tempo_total)}s
+ Taxa média: {taxa_final:.1f} registros/segundo
+ Páginas processadas: {current_page - 1}
+ Multithreading: Ativo (Coleta + Escrita simultânea)
+ Processamento: Busca 1 escreve 1 (chunks)"""
                 
                 self.finished.emit(total_registros_final, mensagem_final)
             else:
@@ -492,11 +550,11 @@ class ScrapsManager(QWidget):
         row1.addStretch()
         form_layout.addLayout(row1)
         
-        # Linha 2: Datas
+        # Linha 2: Datas com opções rápidas
         row2 = QHBoxLayout()
         self.data_inicio = QDateEdit()
         self.data_inicio.setCalendarPopup(True)
-        self.data_inicio.setDate(QDate.currentDate())
+        self.data_inicio.setDate(QDate.currentDate().addMonths(-1))  # Último mês por padrão
         self.data_inicio.setDisplayFormat("dd/MM/yyyy")
         
         self.data_fim = QDateEdit()
@@ -504,19 +562,31 @@ class ScrapsManager(QWidget):
         self.data_fim.setDate(QDate.currentDate())
         self.data_fim.setDisplayFormat("dd/MM/yyyy")
         
+        # Botões de período rápido
+        btn_ultimo_mes = QPushButton("Último Mês")
+        btn_ultimo_ano = QPushButton("Último Ano")
+        btn_ultimos_3_meses = QPushButton("Últimos 3 Meses")
+        
+        btn_ultimo_mes.clicked.connect(self.definir_ultimo_mes)
+        btn_ultimo_ano.clicked.connect(self.definir_ultimo_ano)
+        btn_ultimos_3_meses.clicked.connect(self.definir_ultimos_3_meses)
+        
         row2.addWidget(QLabel("Data Início:"))
         row2.addWidget(self.data_inicio)
         row2.addWidget(QLabel("Data Fim:"))
         row2.addWidget(self.data_fim)
+        row2.addWidget(btn_ultimo_mes)
+        row2.addWidget(btn_ultimos_3_meses)
+        row2.addWidget(btn_ultimo_ano)
         row2.addStretch()
         form_layout.addLayout(row2)
 
         # Botões de ação
         btn_layout = QHBoxLayout()
-        btn_salvar = QPushButton("💾 Criar Scrap")
-        btn_excluir = QPushButton("🗑️ Excluir")
-        btn_executar = QPushButton("▶️ Executar Scrap")
-        btn_recarregar = QPushButton("🔄 Recarregar Lista")
+        btn_salvar = QPushButton("Criar Scrap")
+        btn_excluir = QPushButton("Excluir")
+        btn_executar = QPushButton("Executar Scrap")
+        btn_recarregar = QPushButton("Recarregar Lista")
 
         btn_salvar.clicked.connect(self.salvar_scrap)
         btn_excluir.clicked.connect(self.excluir_scrap)
@@ -558,6 +628,24 @@ class ScrapsManager(QWidget):
         self.inicializar_banco()
         self.carregar_clientes()
         self.carregar_dados()
+
+    def definir_ultimo_mes(self):
+        """Define o período para o último mês"""
+        hoje = QDate.currentDate()
+        self.data_inicio.setDate(hoje.addMonths(-1))
+        self.data_fim.setDate(hoje)
+
+    def definir_ultimo_ano(self):
+        """Define o período para o último ano"""
+        hoje = QDate.currentDate()
+        self.data_inicio.setDate(hoje.addYears(-1))
+        self.data_fim.setDate(hoje)
+
+    def definir_ultimos_3_meses(self):
+        """Define o período para os últimos 3 meses"""
+        hoje = QDate.currentDate()
+        self.data_inicio.setDate(hoje.addMonths(-3))
+        self.data_fim.setDate(hoje)
 
     def conectar(self):
         conn = psycopg2.connect(**DB_CONFIG)
@@ -815,7 +903,7 @@ class ScrapsManager(QWidget):
                 mensagem_completa = f"""
 {msg}
 
-📊 Estatísticas:
+ Estatísticas:
    • Progresso: {current}/{total} páginas ({current*100//total}%)
    • Registros coletados: {registros:,}
    • Tempo estimado restante: {tempo_str}
@@ -875,7 +963,8 @@ class ScrapsManager(QWidget):
         """Limpa os campos do formulário"""
         self.cliente_combo.setCurrentIndex(0)
         self.rota_combo.clear()
-        # As datas ficam com a data atual
+        # Define datas padrão (último mês)
+        self.definir_ultimo_mes()
 
 
 if __name__ == "__main__":
