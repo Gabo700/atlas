@@ -25,6 +25,7 @@ from PySide6.QtCore import Qt
 
 # Imports dos módulos de lógica
 from scraps import ScrapsManager
+from orquestrador_bronze import OrquestradorBronze
 
 # ===============================
 #  Funções auxiliares de log
@@ -82,6 +83,10 @@ class AtlasDataFlowManager(QWidget):
         # Aba 3: Scraps de ETL (usa classe externa)
         self.scraps_manager = ScrapsManager()
         tabs.addTab(self.scraps_manager, "Scraps de ETL")
+
+        # === NOVA ABA: Orquestrador Bronze ===
+        self.orquestrador_bronze = OrquestradorBronze()
+        tabs.addTab(self.orquestrador_bronze, "Orquestrador Bronze")
         
         layout.addWidget(tabs)
         self.setLayout(layout)
@@ -97,10 +102,39 @@ class AtlasDataFlowManager(QWidget):
         return conn
 
     def inicializar_banco(self):
-        """Inicializa as tabelas do banco de dados"""
+        """Inicializa as tabelas do banco de dados incluindo bronze"""
         try:
             conn = self.conectar()
             cur = conn.cursor()
+
+            # Cria tabela de usuários se não existir (para o mapeamento bronze)
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS usuarios (
+                    id SERIAL PRIMARY KEY,
+                    nome TEXT NOT NULL,
+                    documento TEXT UNIQUE,
+                    email TEXT,
+                    divisao_id INTEGER,
+                    ativo BOOLEAN DEFAULT TRUE,
+                    criado_em TIMESTAMP DEFAULT NOW(),
+                    atualizado_em TIMESTAMP DEFAULT NOW()
+                );
+                
+                CREATE INDEX IF NOT EXISTS idx_usuarios_documento ON usuarios(documento);
+                CREATE INDEX IF NOT EXISTS idx_usuarios_nome ON usuarios(nome);
+                CREATE INDEX IF NOT EXISTS idx_usuarios_divisao ON usuarios(divisao_id);
+            """)
+
+            # Cria tabela de divisões se não existir
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS divisoes (
+                    id SERIAL PRIMARY KEY,
+                    nome TEXT NOT NULL,
+                    codigo TEXT UNIQUE,
+                    ativo BOOLEAN DEFAULT TRUE,
+                    criado_em TIMESTAMP DEFAULT NOW()
+                );
+            """)
 
             # Cria tabela de rotas de API se não existir
             cur.execute("""
@@ -139,11 +173,39 @@ class AtlasDataFlowManager(QWidget):
                     EXECUTE FUNCTION atualiza_timestamp_api_rotas();
             """)
 
+            # Inserir algumas divisões de exemplo se a tabela estiver vazia
+            cur.execute("SELECT COUNT(*) FROM divisoes;")
+            if cur.fetchone()[0] == 0:
+                cur.execute("""
+                    INSERT INTO divisoes (nome, codigo) VALUES 
+                    ('Vendas', 'VENDAS'),
+                    ('Marketing', 'MKT'),
+                    ('Financeiro', 'FIN'),
+                    ('Operações', 'OPS'),
+                    ('TI', 'TI')
+                    ON CONFLICT (codigo) DO NOTHING;
+                """)
+
+            # Inserir alguns usuários de exemplo se a tabela estiver vazia
+            cur.execute("SELECT COUNT(*) FROM usuarios;")
+            if cur.fetchone()[0] == 0:
+                cur.execute("""
+                    INSERT INTO usuarios (nome, documento, email, divisao_id) VALUES 
+                    ('João Silva', '123.456.789-00', 'joao.silva@empresa.com', 1),
+                    ('Maria Santos', '987.654.321-00', 'maria.santos@empresa.com', 2),
+                    ('Pedro Oliveira', '111.222.333-44', 'pedro.oliveira@empresa.com', 3),
+                    ('Ana Costa', '555.666.777-88', 'ana.costa@empresa.com', 4),
+                    ('Carlos Souza', '999.888.777-66', 'carlos.souza@empresa.com', 5)
+                    ON CONFLICT (documento) DO NOTHING;
+                """)
+
             conn.commit()
             cur.close()
             conn.close()
+            print("Banco de dados inicializado com sucesso!")
         except Exception as e:
             registrar_erro("inicializar_banco", e)
+            print(f"Erro ao inicializar banco: {e}")
 
     # ===============================
     #  TAB 1: Clientes e Tokens
