@@ -83,7 +83,7 @@ git clone https://github.com/seuusuario/jueri-data-hub.git
 cd jueri-data-hub
 
 API_BASE_URL=https://jueri.com.br/sis/api/v1/1201
-API_TOKEN=seu_token_aqui
+API_TOKEN=
 DB_URL=postgresql+psycopg2://usuario:senha@localhost:5432/jueri
 REDIS_URL=redis://localhost:6379/0
 
@@ -93,5 +93,6 @@ Autor
 Gabriel Ribeiro
 Desenvolvedor
 contato: gabrielribeirosilvasr@protonmail.com
+
 
 
