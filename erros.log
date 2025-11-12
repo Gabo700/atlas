@@ -1,0 +1,95 @@
+
+================================================================================
+[2025-10-27 18:42:08] ERRO EM: inicializar_banco
+connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+Traceback (most recent call last):
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\src\main.py", line 107, in inicializar_banco
+    conn = self.conectar()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\src\main.py", line 100, in conectar
+    conn = psycopg2.connect(**DB_CONFIG)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+
+================================================================================
+
+================================================================================
+[2025-10-27 18:42:08] ERRO EM: carregar_dados_clientes
+connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+Traceback (most recent call last):
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\src\main.py", line 262, in carregar_dados_clientes
+    conn = self.conectar()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\src\main.py", line 100, in conectar
+    conn = psycopg2.connect(**DB_CONFIG)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+
+================================================================================
+
+================================================================================
+[2025-10-27 18:42:43] ERRO EM: inicializar_banco
+connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+Traceback (most recent call last):
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\src\main.py", line 107, in inicializar_banco
+    conn = self.conectar()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\src\main.py", line 100, in conectar
+    conn = psycopg2.connect(**DB_CONFIG)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+
+================================================================================
+
+================================================================================
+[2025-10-27 18:42:43] ERRO EM: carregar_dados_clientes
+connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+Traceback (most recent call last):
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\src\main.py", line 262, in carregar_dados_clientes
+    conn = self.conectar()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\src\main.py", line 100, in conectar
+    conn = psycopg2.connect(**DB_CONFIG)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+
+================================================================================
+
+================================================================================
+[2025-10-27 18:42:44] ERRO EM: carregar_clientes_combo
+connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+Traceback (most recent call last):
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\src\main.py", line 488, in carregar_clientes_combo
+    conn = self.conectar()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\src\main.py", line 100, in conectar
+    conn = psycopg2.connect(**DB_CONFIG)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Gabs\Documents\Projetos\atlas of\atlas\venv\Lib\site-packages\psycopg2\__init__.py", line 135, in connect
+    conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+
+================================================================================
